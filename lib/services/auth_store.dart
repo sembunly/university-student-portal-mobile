@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/profile_update_request.dart';
+import '../models/location_option.dart';
 import '../models/student_account.dart';
 import '../models/student_profile.dart';
 import 'api_service.dart';
@@ -76,6 +77,22 @@ class AuthStore extends ChangeNotifier {
     }
   }
 
+  Future<List<LocationOption>> provinces() {
+    return _withToken(_api.provinces);
+  }
+
+  Future<List<LocationOption>> districts(int provinceId) {
+    return _withToken((token) => _api.districts(token, provinceId));
+  }
+
+  Future<List<LocationOption>> communes(int districtId) {
+    return _withToken((token) => _api.communes(token, districtId));
+  }
+
+  Future<List<LocationOption>> villages(int communeId) {
+    return _withToken((token) => _api.villages(token, communeId));
+  }
+
   Future<void> logout() async {
     final token = _token;
     account = null;
@@ -123,5 +140,16 @@ class AuthStore extends ChangeNotifier {
       isBusy = false;
       notifyListeners();
     }
+  }
+
+  Future<T> _withToken<T>(Future<T> Function(String token) request) {
+    final token = _token;
+    if (token == null) {
+      throw const ApiException(
+        'Your session has expired. Please sign in again.',
+        statusCode: 401,
+      );
+    }
+    return request(token);
   }
 }

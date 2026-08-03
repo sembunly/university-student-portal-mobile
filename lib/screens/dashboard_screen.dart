@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../services/auth_store.dart';
 import '../theme/app_colors.dart';
 import '../widgets/auth_widgets.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key, required this.authStore});
@@ -44,12 +45,12 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 if (!account.profileCompleted) ...[
-                  const _ProfilePrompt(),
+                  _ProfilePrompt(onPressed: () => _openProfile(context)),
                   const SizedBox(height: 20),
                 ],
                 const _SectionLabel('QUICK ACCESS'),
                 const SizedBox(height: 10),
-                const Row(
+                Row(
                   children: [
                     Expanded(
                       child: _QuickTile(
@@ -57,15 +58,21 @@ class DashboardScreen extends StatelessWidget {
                         title: 'Profile',
                         subtitle: 'Student info',
                         tint: AppColors.blue,
+                        onPressed: () => _openProfile(context),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _QuickTile(
                         icon: CupertinoIcons.book,
                         title: 'Curriculum',
                         subtitle: 'Your courses',
                         tint: AppColors.success,
+                        onPressed: () => Navigator.of(context).push(
+                          CupertinoPageRoute<void>(
+                            builder: (_) => const _CurriculumScreen(),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -105,6 +112,14 @@ class DashboardScreen extends StatelessWidget {
     );
 
     if (shouldLogout ?? false) await authStore.logout();
+  }
+
+  void _openProfile(BuildContext context) {
+    Navigator.of(context).push(
+      CupertinoPageRoute<void>(
+        builder: (_) => ProfileScreen(authStore: authStore),
+      ),
+    );
   }
 }
 
@@ -231,45 +246,62 @@ class _CardDetail extends StatelessWidget {
 }
 
 class _ProfilePrompt extends StatelessWidget {
-  const _ProfilePrompt();
+  const _ProfilePrompt({required this.onPressed});
+
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF1FF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD5E2FF)),
-      ),
-      child: const Row(
-        children: [
-          Icon(
-            CupertinoIcons.person_crop_circle_badge_exclam,
-            color: AppColors.blue,
-          ),
-          SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Profile setup is next',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Your student ID will appear after profile completion.',
-                  style: TextStyle(
-                    color: AppColors.secondary,
-                    fontSize: 13,
-                    height: 1.35,
-                  ),
-                ),
-              ],
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      onPressed: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF1FF),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFD5E2FF)),
+        ),
+        child: const Row(
+          children: [
+            Icon(
+              CupertinoIcons.person_crop_circle_badge_exclam,
+              color: AppColors.blue,
             ),
-          ),
-        ],
+            SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Profile setup is next',
+                    style: TextStyle(
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Tap to enter your information and receive your student ID.',
+                    style: TextStyle(
+                      color: AppColors.secondary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              color: AppColors.blue,
+              size: 17,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -281,45 +313,112 @@ class _QuickTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.tint,
+    required this.onPressed,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final Color tint;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: tint.withValues(alpha: 0.11),
-              borderRadius: BorderRadius.circular(12),
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size.zero,
+      pressedOpacity: 0.72,
+      onPressed: onPressed,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: tint.withValues(alpha: 0.11),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: tint, size: 21),
             ),
-            child: Icon(icon, color: tint, size: 21),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.secondary, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CurriculumScreen extends StatelessWidget {
+  const _CurriculumScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('Curriculum'),
+        backgroundColor: Color(0xF2F7F8FC),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.11),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.book,
+                    color: AppColors.success,
+                    size: 34,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Your curriculum',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your courses will appear here when curriculum data is available.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.secondary,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            subtitle,
-            style: const TextStyle(color: AppColors.secondary, fontSize: 12),
-          ),
-        ],
+        ),
       ),
     );
   }

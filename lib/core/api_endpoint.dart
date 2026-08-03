@@ -9,6 +9,16 @@ abstract final class ApiConfig {
   static const String mePath = '/auth/me';
   static const String logoutPath = '/auth/logout';
   static const String profilePath = '/profile';
+  static const String provincesPath = '/addresses/provinces';
+
+  static String districtsPath(int provinceId) =>
+      '/addresses/provinces/$provinceId/districts';
+
+  static String communesPath(int districtId) =>
+      '/addresses/districts/$districtId/communes';
+
+  static String villagesPath(int communeId) =>
+      '/addresses/communes/$communeId/villages';
 
   static Uri uri(String path) {
     final normalizedPath = path.startsWith('/') ? path : '/$path';

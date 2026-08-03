@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../core/api_endpoint.dart';
+import '../models/location_option.dart';
 import '../models/profile_update_request.dart';
 import '../models/student_account.dart';
 import '../models/student_profile.dart';
@@ -77,9 +78,7 @@ class ApiService {
     final profile = data['profile'];
 
     return ProfileResult(
-      account: StudentAccount.fromJson(
-        data['account'] as Map<String, dynamic>,
-      ),
+      account: StudentAccount.fromJson(data['account'] as Map<String, dynamic>),
       profile: profile is Map<String, dynamic>
           ? StudentProfile.fromJson(profile)
           : null,
@@ -102,6 +101,22 @@ class ApiService {
     return profile(token);
   }
 
+  Future<List<LocationOption>> provinces(String token) {
+    return _locations(ApiConfig.provincesPath, token);
+  }
+
+  Future<List<LocationOption>> districts(String token, int provinceId) {
+    return _locations(ApiConfig.districtsPath(provinceId), token);
+  }
+
+  Future<List<LocationOption>> communes(String token, int districtId) {
+    return _locations(ApiConfig.communesPath(districtId), token);
+  }
+
+  Future<List<LocationOption>> villages(String token, int communeId) {
+    return _locations(ApiConfig.villagesPath(communeId), token);
+  }
+
   Future<void> logout(String token) async {
     final response = await _client
         .post(
@@ -110,6 +125,18 @@ class ApiService {
         )
         .timeout(const Duration(seconds: 15));
     _decode(response);
+  }
+
+  Future<List<LocationOption>> _locations(String path, String token) async {
+    final response = await _client
+        .get(ApiConfig.uri(path), headers: _headers(token: token))
+        .timeout(const Duration(seconds: 15));
+    final body = _decode(response);
+    final data = body['data'] as List<dynamic>;
+
+    return data
+        .map((item) => LocationOption.fromJson(item as Map<String, dynamic>))
+        .toList(growable: false);
   }
 
   Future<AuthResult> _authenticate(
