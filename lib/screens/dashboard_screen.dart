@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
-import '../main.dart';
 import '../services/auth_store.dart';
+import '../theme/app_colors.dart';
 import '../widgets/auth_widgets.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -12,6 +12,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final account = authStore.account!;
+    final profile = authStore.profile;
 
     return CupertinoPageScaffold(
       child: CustomScrollView(
@@ -37,6 +38,7 @@ class DashboardScreen extends StatelessWidget {
             sliver: SliverList.list(
               children: [
                 _WelcomeCard(
+                  name: profile?.nameEn ?? profile?.nameKm,
                   studentId: account.studentId ?? 'Pending',
                   phone: account.phone,
                 ),
@@ -107,13 +109,20 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _WelcomeCard extends StatelessWidget {
-  const _WelcomeCard({required this.studentId, required this.phone});
+  const _WelcomeCard({
+    required this.name,
+    required this.studentId,
+    required this.phone,
+  });
 
+  final String? name;
   final String studentId;
   final String phone;
 
   @override
   Widget build(BuildContext context) {
+    final displayName = name?.trim();
+
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -155,9 +164,11 @@ class _WelcomeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Your student space',
-                style: TextStyle(
+              Text(
+                displayName?.isNotEmpty == true
+                    ? displayName!
+                    : 'Your student space',
+                style: const TextStyle(
                   color: CupertinoColors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.w700,

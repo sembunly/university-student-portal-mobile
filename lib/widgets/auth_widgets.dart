@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 
-import '../main.dart';
+import '../theme/app_colors.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({

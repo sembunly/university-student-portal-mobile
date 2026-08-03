@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
-import '../main.dart';
 import '../services/auth_store.dart';
+import '../theme/app_colors.dart';
 import '../widgets/auth_widgets.dart';
 import 'register_screen.dart';
 

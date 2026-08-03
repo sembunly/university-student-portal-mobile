@@ -2,19 +2,23 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/api_endpoint.dart';
+import '../models/profile_update_request.dart';
 import '../models/student_account.dart';
-
-const _defaultBaseUrl = 'http://127.0.0.1:8000/api/v1';
-const apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: _defaultBaseUrl,
-);
+import '../models/student_profile.dart';
 
 class AuthResult {
   const AuthResult({required this.token, required this.account});
 
   final String token;
   final StudentAccount account;
+}
+
+class ProfileResult {
+  const ProfileResult({required this.account, this.profile});
+
+  final StudentAccount account;
+  final StudentProfile? profile;
 }
 
 class ApiException implements Exception {
@@ -33,10 +37,10 @@ class ApiService {
   final http.Client _client;
 
   Future<AuthResult> login({required String login, required String password}) {
-    return _authenticate('/auth/login', {
+    return _authenticate(ApiConfig.loginPath, {
       'login': login.trim(),
       'password': password,
-      'device_name': 'USP iOS',
+      'device_name': 'Pixel 9',
     });
   }
 
@@ -44,7 +48,7 @@ class ApiService {
     required String phone,
     required String password,
   }) {
-    return _authenticate('/auth/register', {
+    return _authenticate(ApiConfig.registerPath, {
       'phone': phone.trim(),
       'password': password,
       'password_confirmation': password,
@@ -54,17 +58,54 @@ class ApiService {
 
   Future<StudentAccount> me(String token) async {
     final response = await _client
-        .get(Uri.parse('$apiBaseUrl/auth/me'), headers: _headers(token: token))
+        .get(ApiConfig.uri(ApiConfig.mePath), headers: _headers(token: token))
         .timeout(const Duration(seconds: 15));
     final body = _decode(response);
 
     return StudentAccount.fromJson(body['data'] as Map<String, dynamic>);
   }
 
+  Future<ProfileResult> profile(String token) async {
+    final response = await _client
+        .get(
+          ApiConfig.uri(ApiConfig.profilePath),
+          headers: _headers(token: token),
+        )
+        .timeout(const Duration(seconds: 15));
+    final body = _decode(response);
+    final data = body['data'] as Map<String, dynamic>;
+    final profile = data['profile'];
+
+    return ProfileResult(
+      account: StudentAccount.fromJson(
+        data['account'] as Map<String, dynamic>,
+      ),
+      profile: profile is Map<String, dynamic>
+          ? StudentProfile.fromJson(profile)
+          : null,
+    );
+  }
+
+  Future<ProfileResult> updateProfile(
+    String token,
+    ProfileUpdateRequest request,
+  ) async {
+    final response = await _client
+        .post(
+          ApiConfig.uri(ApiConfig.profilePath),
+          headers: _headers(token: token),
+          body: jsonEncode(request.toJson()),
+        )
+        .timeout(const Duration(seconds: 15));
+    _decode(response);
+
+    return profile(token);
+  }
+
   Future<void> logout(String token) async {
     final response = await _client
         .post(
-          Uri.parse('$apiBaseUrl/auth/logout'),
+          ApiConfig.uri(ApiConfig.logoutPath),
           headers: _headers(token: token),
         )
         .timeout(const Duration(seconds: 15));
@@ -77,7 +118,7 @@ class ApiService {
   ) async {
     final response = await _client
         .post(
-          Uri.parse('$apiBaseUrl$path'),
+          ApiConfig.uri(path),
           headers: _headers(),
           body: jsonEncode(payload),
         )
